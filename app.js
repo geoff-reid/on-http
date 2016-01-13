@@ -48,8 +48,9 @@ function Runner(
                 return skuPack.start(configuration.get('skuPackRoot', './skupack.d'));
             })
             .then(function() {
+                // TODO: The following endpoint definition is for DEBUG using
+                // It will fianlly been moved to monorail.json config file
                 // var endpoints = configuration.get('httpEndpoints', [{port:8080}]);
-                //for debug
                 var endpoints = [
                     {
                         "address": "0.0.0.0",
@@ -60,16 +61,17 @@ function Runner(
                         "httpsPfx": null,
                         "proxiesEnabled": false,
                         "authEnabled": true,
-                        "router": "northbound-api-router"
+                        "routers": "northbound-api-router"
                     },
                     {
                         "address": "172.31.128.1",
                         "port": 9080,
                         "httpsEnabled": false,
                         "proxiesEnabled": true,
-                        "router": "southbound-api-router"
+                        "routers": "southbound-api-router"
                     }
                 ];
+
                 return Promise.map(endpoints, function(endpoint) {
                     var service = new HttpService(endpoint);
                     services.push(service);
