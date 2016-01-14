@@ -14,23 +14,22 @@ di.annotate(Runner, new di.Inject(
         'Services.Configuration',
         'Profiles',
         'Templates',
-        'common-api-router',
         'fileService',
         'Promise',
         'Http.Services.SkuPack'
     )
 );
 function Runner(
-    app,
+    HttpService,
     core,
     configuration,
     profiles,
     templates,
-    router,
     fileService,
     Promise,
     skuPack
 ) {
+    var services = [];
 
     function start() {
         return core.start()
@@ -49,18 +48,45 @@ function Runner(
                 return skuPack.start(configuration.get('skuPackRoot', './skupack.d'));
             })
             .then(function() {
-                return app.listen();
+                // TODO: The following endpoint definition is for DEBUG using
+                // It will fianlly been moved to monorail.json config file
+                // var endpoints = configuration.get('httpEndpoints', [{port:8080}]);
+                var endpoints = [
+                    {
+                        "address": "0.0.0.0",
+                        "port": 8443,
+                        "httpsEnabled": true,
+                        "httpsCert": "data/dev-cert.pem",
+                        "httpsKey": "data/dev-key.pem",
+                        "httpsPfx": null,
+                        "proxiesEnabled": false,
+                        "authEnabled": true,
+                        "routers": "northbound-api-router"
+                    },
+                    {
+                        "address": "172.31.128.1",
+                        "port": 9080,
+                        "httpsEnabled": false,
+                        "proxiesEnabled": true,
+                        "routers": "southbound-api-router"
+                    }
+                ];
+
+                return Promise.map(endpoints, function(endpoint) {
+                    var service = new HttpService(endpoint);
+                    services.push(service);
+                    return service.start();
+                });
             });
     }
 
     function stop() {
-        return Promise.resolve()
-            .then(function() {
-                return app.close();
-            })
-            .then(function() {
-                return core.stop();
-            });
+        return Promise.map(services, function(service) {
+             service.stop();
+        })
+        .then(function() {
+            return core.stop();
+        });
     }
 
     return {
