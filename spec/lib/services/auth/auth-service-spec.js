@@ -8,7 +8,6 @@ var ws = require('ws');
 describe('Auth.Service', function () {
     var server;
     var sandbox = sinon.sandbox.create();
-    var sandbox = sinon.sandbox.create();
     var jwtStrategy = require('passport-jwt').Strategy;
 
     var SUCCESS_STATUS = 200;
@@ -18,20 +17,37 @@ describe('Auth.Service', function () {
     var ERROR_STATUS = 500;
 
     var token = '';
+    var endpoint = {
+        "address": "0.0.0.0",
+        "port": 8443,
+        "httpsEnabled": true,
+        "httpsCert": "data/dev-cert.pem",
+        "httpsKey": "data/dev-key.pem",
+        "httpsPfx": null,
+        "proxiesEnabled": false,
+        "authEnabled": true,
+        "routers": "northbound-api-router"
+    };
+
+    function startServer(endpoint){
+        var Server = helper.injector.get('Http.Server');
+        server = new Server(endpoint);
+        server.start();
+    }
 
     function cleanUp(){
-        server.close();
+        server.stop();
         sandbox.restore();
+        restoreConfig();
+
+    };
+
+    function restoreConfig(){
         helper.injector.get('Services.Configuration')
-            .set('httpEnabled', true)
-            .set('httpsEnabled', true)
-            .set('authEnabled', false)
-            .set('httpBindPort', 8080)
-            .set('httpsBindPort', 8443)
             .set('authPasswordHash', 'KcBN9YobNV0wdux8h0fKNqi4uoKCgGl/j8c6YGlG7iA0PB3P9ojbmANGhDlcSBE0iOTIsYsGbtSsbqP4wvsVcw==')
             .set('authPasswordSalt', 'zlxkgxjvcFwm0M8sWaGojh25qNYO8tuNWUMN4xKPH93PidwkCAvaX2JItLA3p7BSCWIzkw4GwWuezoMvKf3UXg==')
             .set('authTokenExpireIn', 86400)
-    };
+    }
 
     helper.before(function () {
         return [
@@ -44,190 +60,6 @@ describe('Auth.Service', function () {
         ];
     });
 
-    before(function () {
-
-    });
-
-    before('start http and https server with auth enabled', function () {
-        this.timeout(5000);
-        server = helper.injector.get('Http.Server');
-
-        helper.injector.get('Services.Configuration')
-            .set('httpEnabled', true)
-            .set('httpsEnabled', true)
-            .set('authEnabled', true)
-            .set('httpBindPort', 8089)
-            .set('httpsBindPort', 8443);
-        server.listen();
-    });
-
-    it('should return a token from /login', function () {
-        return helper.request('https://localhost:8443')
-            .post('/api/1.1/login')
-            .send({username: "admin", password: "admin123"})
-            .expect(SUCCESS_STATUS)
-            .expect(function(res) {
-                expect(res.body.token).to.be.a('string');
-                token = res.body.token;
-                console.log(SUCCESS_STATUS, res.body)
-            })
-    });
-
-    it('should able to access with correct token in query string', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config?auth_token=' + token)
-            .expect(SUCCESS_STATUS)
-            .expect(function(res) {
-                expect(res.body).to.be.a('object');
-                expect(res.body.authEnabled).to.equal(true);
-                console.log(SUCCESS_STATUS, 'authEnabled=' ,res.body.authEnabled)
-            })
-    });
-
-    it('should fail with wrong token in query string', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config?auth_token=' + token + 'balabalabala')
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('invalid signature');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
-    it('should fail with empty token in query string', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config?auth_token=')
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('No auth token');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
-    it('should fail with wrong token key in query string', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config?auth_tokennnnnnnn=')
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('No auth token');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
-    it('should able to access with correct token in query header', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config')
-            .set("authorization", 'JWT ' + token)
-            .send()
-            .expect(SUCCESS_STATUS)
-            .expect(function(res) {
-                expect(res.body).to.be.a('object');
-                expect(res.body.authEnabled).to.equal(true);
-                console.log(SUCCESS_STATUS, 'authEnabled=' ,res.body.authEnabled)
-            })
-    });
-
-    it('should fail with wrong token in query header', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config')
-            .set("authorization", 'JWT ' + token + 'balabalabala')
-            .send()
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('invalid signature');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
-    it('should fail with empty token in query header', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config')
-            .set("authorization", '')
-            .send()
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('No auth token');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
-    it('should fail with wrong token key in query header', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config')
-            .set("authorization_balabalabala", '')
-            .send()
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('No auth token');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
-    it('should able to access with correct token in query body', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config')
-            .send({auth_token: token})
-            .expect(SUCCESS_STATUS)
-            .expect(function(res) {
-                expect(res.body).to.be.a('object');
-                expect(res.body.authEnabled).to.equal(true);
-                console.log(SUCCESS_STATUS, 'authEnabled=' ,res.body.authEnabled)
-            })
-    });
-
-    it('should fail with wrong token in query body', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config')
-            .send({auth_token: token + 'balabalabala'})
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('invalid signature');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
-    it('should fail with empty token in query body', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config')
-            .send({auth_token: ''})
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('No auth token');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
-    it('should fail with wrong token key in query body', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config')
-            .send({auth_tokennnnnnnnn: token})
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('No auth token');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
-    it('should fail with no token at all', function () {
-        return helper.request('https://localhost:8443')
-            .get('/api/1.1/config')
-            .expect(UNAUTHORIZED_STATUS)
-            .expect(function(res) {
-                expect(res.body.message).to.be.a('string');
-                expect(res.body.message).to.equal('No auth token');
-                console.log(UNAUTHORIZED_STATUS ,res.body)
-            })
-    });
-
     before('allow self signed certs', function () {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     });
@@ -238,8 +70,181 @@ describe('Auth.Service', function () {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = '1';
     });
 
-    after('Clean up', function(){
-        cleanUp();
+    describe('Auth.Service', function () {
+        before('start http and https server with auth enabled', function () {
+            startServer(endpoint);
+        });
+
+        it('should return a token from /login', function () {
+            return helper.request('https://localhost:8443')
+                .post('/api/1.1/login')
+                .send({username: "admin", password: "admin123"})
+                .expect(SUCCESS_STATUS)
+                .expect(function (res) {
+                    expect(res.body.token).to.be.a('string');
+                    token = res.body.token;
+                    console.log(SUCCESS_STATUS, res.body)
+                })
+        });
+
+        it('should able to access with correct token in query string', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config?auth_token=' + token)
+                .expect(SUCCESS_STATUS)
+                .expect(function (res) {
+                    expect(res.body).to.be.a('object');
+                    expect(res.body.apiServerPort).to.equal(8080);
+                    console.log(SUCCESS_STATUS);
+                })
+        });
+
+        it('should fail with wrong token in query string', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config?auth_token=' + token + 'balabalabala')
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('invalid signature');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        it('should fail with empty token in query string', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config?auth_token=')
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('No auth token');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        it('should fail with wrong token key in query string', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config?auth_tokennnnnnnn=')
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('No auth token');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        it('should able to access with correct token in query header', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config')
+                .set("authorization", 'JWT ' + token)
+                .send()
+                .expect(SUCCESS_STATUS)
+                .expect(function (res) {
+                    expect(res.body).to.be.a('object');
+                    expect(res.body.apiServerPort).to.equal(8080);
+                    console.log(SUCCESS_STATUS);
+                })
+        });
+
+        it('should fail with wrong token in query header', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config')
+                .set("authorization", 'JWT ' + token + 'balabalabala')
+                .send()
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('invalid signature');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        it('should fail with empty token in query header', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config')
+                .set("authorization", '')
+                .send()
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('No auth token');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        it('should fail with wrong token key in query header', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config')
+                .set("authorization_balabalabala", '')
+                .send()
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('No auth token');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        it('should able to access with correct token in query body', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config')
+                .send({auth_token: token})
+                .expect(SUCCESS_STATUS)
+                .expect(function (res) {
+                    expect(res.body).to.be.a('object');
+                    expect(res.body.apiServerPort).to.equal(8080);
+                    console.log(SUCCESS_STATUS);
+                })
+        });
+
+        it('should fail with wrong token in query body', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config')
+                .send({auth_token: token + 'balabalabala'})
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('invalid signature');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        it('should fail with empty token in query body', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config')
+                .send({auth_token: ''})
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('No auth token');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        it('should fail with wrong token key in query body', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config')
+                .send({auth_tokennnnnnnnn: token})
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('No auth token');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        it('should fail with no token at all', function () {
+            return helper.request('https://localhost:8443')
+                .get('/api/1.1/config')
+                .expect(UNAUTHORIZED_STATUS)
+                .expect(function (res) {
+                    expect(res.body.message).to.be.a('string');
+                    expect(res.body.message).to.equal('No auth token');
+                    console.log(UNAUTHORIZED_STATUS, res.body)
+                })
+        });
+
+        after('Clean up', function () {
+            cleanUp();
+        });
     });
 
     describe('Should return internal server error with auth error callback', function () {
@@ -247,6 +252,7 @@ describe('Auth.Service', function () {
             sandbox.stub(jwtStrategy.prototype, 'authenticate', function(req, options) {
                 return this.error('something');
             });
+            startServer(endpoint);
         });
 
         it('should fail with auth', function() {
@@ -269,11 +275,7 @@ describe('Auth.Service', function () {
     describe('Corrupted hash from config', function () {
         before('Mock configure settings', function () {
             this.timeout(5000);
-
             helper.injector.get('Services.Configuration')
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpsBindPort', 8443)
                 .set('authPasswordHash', 'aaa');
         });
 
@@ -285,7 +287,7 @@ describe('Auth.Service', function () {
         });
 
         after('stop server, restore mock and configure',function () {
-            cleanUp();
+            restoreConfig();
         });
     });
 
@@ -294,9 +296,6 @@ describe('Auth.Service', function () {
             this.timeout(5000);
 
             helper.injector.get('Services.Configuration')
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpsBindPort', 8443)
                 .set('authPasswordSalt', 'aaa');
         });
 
@@ -308,7 +307,7 @@ describe('Auth.Service', function () {
         });
 
         after('stop server, restore mock and configure',function () {
-            cleanUp();
+            restoreConfig();
         });
     });
 
@@ -317,9 +316,6 @@ describe('Auth.Service', function () {
             this.timeout(5000);
 
             helper.injector.get('Services.Configuration')
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpsBindPort', 8443)
                 .set('authTokenExpireIn', 'aaa');
         });
 
@@ -331,23 +327,17 @@ describe('Auth.Service', function () {
         });
 
         after('stop server, restore mock and configure',function () {
-            cleanUp();
+            restoreConfig();
         });
     });
 
     describe('Token should expire as expected', function () {
         before('start http and https server with auth enabled', function () {
             this.timeout(10000);
-            server = helper.injector.get('Http.Server');
 
             helper.injector.get('Services.Configuration')
-                .set('httpEnabled', true)
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpBindPort', 8089)
-                .set('httpsBindPort', 8443)
                 .set('authTokenExpireIn', 1);
-            server.listen();
+            startServer(endpoint);
         });
 
         it('should return a token from /login', function () {
@@ -368,8 +358,8 @@ describe('Auth.Service', function () {
                 .expect(SUCCESS_STATUS)
                 .expect(function(res) {
                     expect(res.body).to.be.a('object');
-                    expect(res.body.authEnabled).to.equal(true);
-                    console.log(SUCCESS_STATUS, 'authEnabled=' ,res.body.authEnabled)
+                    expect(res.body.apiServerPort).to.equal(8080);
+                    console.log(SUCCESS_STATUS);
                 })
         });
 
@@ -396,25 +386,18 @@ describe('Auth.Service', function () {
     });
 
     describe('Token should not expire as expected', function () {
-        before('start http and https server expiration set to 1 second', function () {
-            this.timeout(5000);
-            server = helper.injector.get('Http.Server');
-
-            helper.injector.get('Services.Configuration')
-                .set('httpEnabled', true)
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpBindPort', 8089)
-                .set('httpsBindPort', 8443)
-                .set('authTokenExpireIn', 1);
-            server.listen().then(function() {
-                // close server, override token expire setting and restart server
-                server.close().then(function() {
-                    helper.injector.get('Services.Configuration')
-                        .set('authTokenExpireIn', 0);
-                    server.listen();
-                });
-            });
+        before('start https server expiration set to 1 second', function () {
+            return Promise.resolve().then(function(){
+                helper.injector.get('Services.Configuration')
+                    .set('authTokenExpireIn', 1);
+                startServer(endpoint);
+            }).then(function() {
+                server.stop();
+            }).then(function (){
+                helper.injector.get('Services.Configuration')
+                    .set('authTokenExpireIn', 0);
+                startServer(endpoint);
+            })
         });
 
         it('should return a token from /login', function () {
@@ -435,9 +418,9 @@ describe('Auth.Service', function () {
                 .expect(SUCCESS_STATUS)
                 .expect(function(res) {
                     expect(res.body).to.be.a('object');
-                    expect(res.body.authEnabled).to.equal(true);
-                    console.log(SUCCESS_STATUS, 'authEnabled=' ,res.body.authEnabled)
-                });
+                    expect(res.body.apiServerPort).to.equal(8080);
+                    console.log(SUCCESS_STATUS);
+                })
         });
 
         it('Should still able to access after certain time', function() {
@@ -450,9 +433,9 @@ describe('Auth.Service', function () {
                         .expect(SUCCESS_STATUS)
                         .expect(function(res) {
                             expect(res.body).to.be.a('object');
-                            expect(res.body.authEnabled).to.equal(true);
-                            console.log(SUCCESS_STATUS, 'authEnabled=' ,res.body.authEnabled)
-                        });
+                            expect(res.body.apiServerPort).to.equal(8080);
+                            console.log(SUCCESS_STATUS);
+                        })
                 });
         });
 
@@ -469,15 +452,7 @@ describe('Auth.Service', function () {
                 function(password, salt, interation, bytes, callback) {
                 return callback('something');
             });
-            server = helper.injector.get('Http.Server');
-            helper.injector.get('Services.Configuration')
-                .set('httpEnabled', true)
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpBindPort', 8089)
-                .set('httpsBindPort', 8443)
-                .set('authTokenExpireIn', 86400);
-            server.listen();
+            startServer(endpoint);
         });
 
         it('should fail accessing /login with internal error', function () {
@@ -504,7 +479,6 @@ describe('Auth.Service', function () {
             var jwt = require('jsonwebtoken');
             sandbox.stub(authService, 'createJwtToken',function (user) {
                     var self = this;
-                console.log('in jwt sign ~~~~~~~')
                     return jwt.sign({
                             user: 'test_user'
                         },
@@ -512,15 +486,7 @@ describe('Auth.Service', function () {
                         self.jwtSignOptions
                     );
                 });
-            server = helper.injector.get('Http.Server');
-            helper.injector.get('Services.Configuration')
-                .set('httpEnabled', true)
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpBindPort', 8089)
-                .set('httpsBindPort', 8443)
-                .set('authTokenExpireIn', 86400);
-            server.listen();
+            startServer(endpoint);
         });
 
         it('should return a token from /login', function () {
