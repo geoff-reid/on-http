@@ -5,7 +5,7 @@
 
 var ws = require('ws');
 
-describe('common-api-router', function () {
+describe('Http.Api.Auth', function () {
 
     helper.before(function () {
         return [
@@ -24,7 +24,7 @@ describe('common-api-router', function () {
     helper.after();
 
     it('should add routes', function () {
-        var router = helper.injector.get('common-api-router');
+        var router = helper.injector.get('Http.Api.Auth');
         var app = require('express')();
         app.use(router);
     });

@@ -7,6 +7,8 @@ var ws = require('ws');
 
 describe('Http.Server', function () {
     var app, server;
+    var HttpService;
+    var services = [];
 
     var nock = require('nock');
     helper.before(function () {
@@ -32,7 +34,8 @@ describe('Http.Server', function () {
             res.send('Hello World!');
         });
 
-        server = helper.injector.get('Http.Server');
+        // server = helper.injector.get('Http.Server');
+        HttpService = helper.injector.get('Http.Server');
     });
 
     helper.after();
@@ -94,12 +97,38 @@ describe('Http.Server', function () {
     describe('https with pfx', function () {
         before('listen', function () {
             helper.injector.get('Services.Configuration')
-                .set('httpEnabled', false)
-                .set('httpsEnabled', true)
-                .set('httpsPfx', 'data/dev.pfx')
-            // can't use port 443 because it requires setuid root
-                .set('httpsBindPort', 8444);
-            server.listen();
+                .set('httpEndpoints', endpoints)
+            //     .set('httpEnabled', false)
+            //     .set('httpsEnabled', true)
+            //     .set('httpsPfx', 'data/dev.pfx')
+            // // can't use port 443 because it requires setuid root
+            //     .set('httpsBindPort', 8444);
+            var endpoints = [
+                {
+                    "address": "0.0.0.0",
+                    "port": 8443,
+                    "httpsEnabled": true,
+                    "httpsCert": "data/dev-cert.pem",
+                    "httpsKey": "data/dev-key.pem",
+                    "httpsPfx": null,
+                    "proxiesEnabled": false,
+                    "authEnabled": true,
+                    "routers": "northbound-api-router"
+                },
+                {
+                    "address": "172.31.128.1",
+                    "port": 9080,
+                    "httpsEnabled": false,
+                    "proxiesEnabled": true,
+                    "routers": "southbound-api-router"
+                }
+            ];
+            _.forEach(endpoints, function(endpoint) {
+                var service = new HttpService(endpoint);
+                services.push(service);
+                return service.start();
+            })
+            // server.listen();
         });
 
         it('should respond to requests', function () {
@@ -110,7 +139,10 @@ describe('Http.Server', function () {
         });
 
         after('close', function () {
-            server.close();
+            // server.close();
+            _.forEach(services, function(service) {
+                service.stop();
+            })
         });
     });
 
