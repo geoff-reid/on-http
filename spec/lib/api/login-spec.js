@@ -16,16 +16,37 @@ describe('Http.Api.Login', function () {
     var NOT_FOUND_STATUS = 404;
     var ERROR_STATUS = 500;
 
-    function cleanUp(){
-        server.close();
-        sandbox.restore();
-        helper.injector.get('Services.Configuration')
-            .set('httpEnabled', true)
-            .set('httpsEnabled', true)
-            .set('authEnabled', false)
-            .set('httpBindPort', 8080)
-            .set('httpsBindPort', 8443)
+    var endpoint = {
+        "address": "0.0.0.0",
+        "port": 8443,
+        "httpsEnabled": true,
+        "httpsCert": "data/dev-cert.pem",
+        "httpsKey": "data/dev-key.pem",
+        "httpsPfx": null,
+        "proxiesEnabled": false,
+        "authEnabled": true,
+        "routers": "northbound-api-router"
     };
+
+    function startServer(endpoint){
+        var Server = helper.injector.get('Http.Server');
+        server = new Server(endpoint);
+        server.start();
+    }
+
+    function cleanUp(){
+        server.stop();
+        sandbox.restore();
+        restoreConfig();
+
+    };
+
+    function restoreConfig(){
+        helper.injector.get('Services.Configuration')
+            .set('authPasswordHash', 'KcBN9YobNV0wdux8h0fKNqi4uoKCgGl/j8c6YGlG7iA0PB3P9ojbmANGhDlcSBE0iOTIsYsGbtSsbqP4wvsVcw==')
+            .set('authPasswordSalt', 'zlxkgxjvcFwm0M8sWaGojh25qNYO8tuNWUMN4xKPH93PidwkCAvaX2JItLA3p7BSCWIzkw4GwWuezoMvKf3UXg==')
+            .set('authTokenExpireIn', 86400)
+    }
 
     helper.before(function () {
         return [
@@ -36,10 +57,6 @@ describe('Http.Api.Login', function () {
             helper.require('/lib/services/http-service'),
             helper.requireGlob('/lib/**/*.js')
         ];
-    });
-
-    before(function () {
-        server = helper.injector.get('Http.Server');
     });
 
     helper.after();
@@ -55,13 +72,7 @@ describe('Http.Api.Login', function () {
     describe('test with authentication enabled', function () {
         before('start HTTPs server', function () {
             this.timeout(5000);
-            helper.injector.get('Services.Configuration')
-                .set('httpEnabled', true)
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpBindPort', 8089)
-                .set('httpsBindPort', 8443);
-            server.listen();
+            startServer(endpoint);
         });
 
         it('should return a token with correct credential in request body', function() {
@@ -257,6 +268,24 @@ describe('Http.Api.Login', function () {
                 })
         });
 
+        after('stop server, restore mock and configure',function () {
+            cleanUp();
+        });
+    });
+
+    describe('test with authentication enabled', function () {
+        before('start HTTPs server', function () {
+            this.timeout(5000);
+            var endpoint_http = {
+                "address": "0.0.0.0",
+                "port": 8089,
+                "httpsEnabled": false,
+                "authEnabled": true,
+                "routers": "northbound-api-router"
+            };
+            startServer(endpoint_http);
+        });
+
         //give a shoot on http instead of https.
         it('should success auth with http instead of https', function() {
             return helper.request('http://localhost:8089')
@@ -288,13 +317,10 @@ describe('Http.Api.Login', function () {
     describe('test with authentication disabled', function () {
         before('start HTTPs server', function () {
             this.timeout(5000);
-            helper.injector.get('Services.Configuration')
-                .set('httpEnabled', true)
-                .set('httpsEnabled', true)
-                .set('authEnabled', false)
-                .set('httpBindPort', 8089)
-                .set('httpsBindPort', 8443);
-            server.listen();
+            endpoint.authEnabled = false;
+            startServer(endpoint);
+            //restore endpoint
+            endpoint.authEnabled = true;
         });
 
         it('should fail with auth disabled', function() {
@@ -318,13 +344,7 @@ describe('Http.Api.Login', function () {
             sandbox.stub(localStrategy.prototype, 'authenticate', function(req, options) {
                 return this.error('something');
             });
-            helper.injector.get('Services.Configuration')
-                .set('httpEnabled', true)
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpBindPort', 8089)
-                .set('httpsBindPort', 8443);
-            server.listen();
+            startServer(endpoint);
         });
 
         it('should fail with auth', function() {
@@ -350,13 +370,7 @@ describe('Http.Api.Login', function () {
             sandbox.stub(localStrategy.prototype, 'authenticate', function(req, options) {
                 return this.fail({message: 'Some other message'});
             });
-            helper.injector.get('Services.Configuration')
-                .set('httpEnabled', true)
-                .set('httpsEnabled', true)
-                .set('authEnabled', true)
-                .set('httpBindPort', 8089)
-                .set('httpsBindPort', 8443);
-            server.listen();
+            startServer(endpoint);
         });
 
         it('should fail with auth', function() {
