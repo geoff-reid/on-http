@@ -5,10 +5,11 @@
 
 describe('Services.Http.Swagger', function() {
     var swaggerService;
+    var Promise;
+    function MockSerializable() {}
     
     before('inject swagger service', function() {
         // Create mock serializable.
-        function MockSerializable() {}
         MockSerializable.prototype.serialize = sinon.stub();
         MockSerializable.prototype.deserialize = sinon.stub();
         MockSerializable.prototype.validateAsModel = sinon.stub();
@@ -23,19 +24,21 @@ describe('Services.Http.Swagger', function() {
         );
 
         swaggerService = helper.injector.get('Http.Services.Swagger');
+        Promise = helper.injector.get('Promise');
     });
 
     describe('controller()', function() {
         var mockNext;
         var mockController;
+        var controller;
 
         beforeEach(function() {
             mockNext = sinon.stub();
             mockController = sinon.stub();
+            controller = swaggerService.controller(mockController);
         });
 
         it('should call controller callback', function() {
-            var controller = swaggerService.controller(mockController);
             var req = {};
             var res = {
                 headersSent: false
@@ -51,7 +54,6 @@ describe('Services.Http.Swagger', function() {
         });
         
         it('should not call next after sending headers', function() {
-            var controller = swaggerService.controller(mockController);
             var req = {};
             var res = {
                 headersSent: true
@@ -67,7 +69,6 @@ describe('Services.Http.Swagger', function() {
         });
         
         it('should call next if an error occurs', function() {
-            var controller = swaggerService.controller(mockController);
             var req = {};
             var res = {
                 headersSent: false 
@@ -84,7 +85,53 @@ describe('Services.Http.Swagger', function() {
     });
 
     describe('serializer()', function() {
+        var mockNext;
+        var serializer;
+        
+        beforeEach(function() {
+            mockNext = sinon.stub();
+            serializer = swaggerService.serializer('Mock.Serializable');
+        });
+        
+        it('should serialize a scalar', function() {
+            var mockData = {
+                data: 'some data'
+            }
+            var req = {};
+            var res = {
+                body: mockData
+            }
+            MockSerializable.prototype.serialize.returnsArg(0);
+            MockSerializable.prototype.validateAsModel.returnsArg(0);
 
+            expect(serializer).to.be.a('function');
+            return serializer(req, res, mockNext).then(function() {
+                expect(res.body).to.equal(mockData);
+            });
+            
+        });
+        
+        it('should serialize an array', function() {
+            var mockData = 
+            [{
+                data: 'some data'
+            },
+            {
+                data: 'some other data'
+            }];
+            var req = {};
+            var res = {
+                body: mockData
+            };
+
+            MockSerializable.prototype.serialize.returnsArg(0);
+            MockSerializable.prototype.validateAsModel.returnsArg(0);
+
+            expect(serializer).to.be.a('function');
+            return serializer(req, res, mockNext).then(function() {
+                expect(res.body).to.equal(mockData);
+            });        
+        });
     });
 
     describe('deserializer()', function() {
