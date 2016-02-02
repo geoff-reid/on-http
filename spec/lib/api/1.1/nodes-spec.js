@@ -8,7 +8,6 @@ describe('Http.Api.Nodes', function () {
     var waterline;
     var ObmService;
     var taskGraphProtocol;
-    var nodeApiService;
     var Promise;
     var Errors;
     var lookupService;
@@ -32,9 +31,7 @@ describe('Http.Api.Nodes', function () {
             sinon.stub(ObmService.prototype, 'identifyOn');
             sinon.stub(ObmService.prototype, 'identifyOff');
             taskGraphProtocol = helper.injector.get('Protocol.TaskGraphRunner');
-            nodeApiService = helper.injector.get('Http.Services.Api.Nodes');
             sinon.stub(taskGraphProtocol);
-            sinon.stub(nodeApiService);
 
             Promise = helper.injector.get('Promise');
             Errors = helper.injector.get('Errors');
@@ -59,7 +56,6 @@ describe('Http.Api.Nodes', function () {
         resetStubs(waterline.workitems);
         resetStubs(waterline.graphobjects);
         resetStubs(taskGraphProtocol);
-        resetStubs(nodeApiService);
 
         ObmService.prototype.identifyOn.reset();
         ObmService.prototype.identifyOff.reset();
@@ -283,6 +279,9 @@ describe('Http.Api.Nodes', function () {
 
     describe('DELETE /nodes/:identifier', function () {
         it('should delete a node', function () {
+            var nodeApiService = helper.injector.get('Http.Services.Api.Nodes');
+            sinon.stub(nodeApiService);
+
             waterline.nodes.needByIdentifier.resolves(node);
             nodeApiService.removeNode.resolves(node);
 
