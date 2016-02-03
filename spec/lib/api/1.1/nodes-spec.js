@@ -280,7 +280,7 @@ describe('Http.Api.Nodes', function () {
     describe('DELETE /nodes/:identifier', function () {
         it('should delete a node', function () {
             var nodeApiService = helper.injector.get('Http.Services.Api.Nodes');
-            sinon.stub(nodeApiService);
+            var removeStub = sinon.stub(nodeApiService, 'removeNode');
 
             waterline.nodes.needByIdentifier.resolves(node);
             nodeApiService.removeNode.resolves(node);
@@ -290,7 +290,8 @@ describe('Http.Api.Nodes', function () {
                 .expect(200, node)
                 .expect(function () {
                     expect(nodeApiService.removeNode).to.have.been.calledOnce;
-                });
+                })
+                .then(function () {removeStub.restore()});
         });
 
         it('should return a 404 if the node was not found', function () {
