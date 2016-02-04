@@ -277,7 +277,7 @@ describe('Http.Api.Nodes', function () {
     });
 
 
-    describe('DELETE /nodes/:identifier', function () {
+ /*   describe('DELETE /nodes/:identifier', function () {
         it('should delete a node', function () {
             var nodeApiService = helper.injector.get('Http.Services.Api.Nodes');
             sinon.stub(nodeApiService);
@@ -301,7 +301,7 @@ describe('Http.Api.Nodes', function () {
                 .expect(404);
         });
     });
-
+*/
     describe('GET /nodes/:identifier/obm', function () {
         it('should return a list of the node\'s OBM settings', function () {
             waterline.nodes.needByIdentifier.resolves(node);
