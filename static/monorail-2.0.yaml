@@ -1347,6 +1347,9 @@ paths:
     x-swagger-router-controller: nodes
     get:
       x-swagger-serializer: nodes
+      # swagger template and schema names (not sure how to get schema in fitting)...
+      x-swagger-template: 2.0.node.json
+      x-swagger-schema: node
       operationId: nodesGet
       summary: |
         List of all nodes or if there are none an empty object

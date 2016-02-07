@@ -1,0 +1,6 @@
+{
+  "Node Id": "<%= id %>",
+  "Description": "A compute node description",
+  "Name": "Computer System",
+  "System Type": "<%= type %>"
+}
