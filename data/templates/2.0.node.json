@@ -1,6 +1,7 @@
 {
-  "Node Id": "<%= id %>",
-  "Description": "A compute node description",
-  "Name": "Computer System",
-  "System Type": "<%= type %>"
+  "autoDiscover": "<%= autoDiscover %>",
+  "catalogs": "<%= catalogs %>",
+  "createdAt": "<%= createdAt %>",
+  "id": "<%= id %>",
+  "name": "<%= name %>"
 }
