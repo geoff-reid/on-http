@@ -1,7 +1,41 @@
 {
-  "autoDiscover": "<%= autoDiscover %>",
-  "catalogs": "<%= catalogs %>",
-  "createdAt": "<%= createdAt %>",
+  "autoDiscover": "<%= autoDiscover%>",
+  "catalogs": [ "<%= catalogs %>" ],
+  "createdAt": "<%= createdAt%>",
   "id": "<%= id %>",
-  "name": "<%= name %>"
+  <% if (typeof identifiers !== 'undefined') { %>
+"identifiers": ["<%= identifiers%>"],
+<% } %>
+  "name": "<%=name %>",
+<% if (typeof obmSettings !== 'undefined') { %>
+"obmSettings": [
+<% obmSettings.forEach(function(obmSettings, i, arr) { %>
+{
+"config": {
+"host": "<%= obmSettings.config.host%>",
+"password": "<%= obmSettings.config.password%>",
+"user": "<%= obmSettings.config.user%>"
+},
+"service": "<%= obmSettings.service%>"
+}
+<%= ( arr.length > 0 && i < arr.length-1 ) ? ',': '' %>
+<% }); %>
+],
+<% } %>
+  "relations": [
+  {
+    <%relations.forEach(function(relations, i, arr) {
+%>
+"relationType": "<%= relations.relationType%>",
+"targets": ["<%=  relations.targets%>"]
+}
+<%= ( arr.length > 0 && i < arr.length-1 ) ? ',': '' %>
+<% }); %>
+  ],
+<% if (typeof sku !== 'undefined') { %>
+"sku": "<%= sku %>",
+<% } %>
+  "type": "<%= type %>",
+  "updatedAt": "<%= updatedAt %>",
+  "workflows": "<%= workflows%>"
 }
