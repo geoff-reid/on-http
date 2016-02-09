@@ -1,41 +1,41 @@
 {
   "autoDiscover": "<%= autoDiscover%>",
   "catalogs": [ "<%= catalogs %>" ],
-  "createdAt": "<%= createdAt%>",
+  "createdAt": "<%= createdAt.toISOString()%>",
   "id": "<%= id %>",
   <% if (typeof identifiers !== 'undefined') { %>
-"identifiers": ["<%= identifiers%>"],
-<% } %>
+    "identifiers": ["<%= identifiers%>"],
+  <% } %>
   "name": "<%=name %>",
-<% if (typeof obmSettings !== 'undefined') { %>
-"obmSettings": [
-<% obmSettings.forEach(function(obmSettings, i, arr) { %>
-{
-"config": {
-"host": "<%= obmSettings.config.host%>",
-"password": "<%= obmSettings.config.password%>",
-"user": "<%= obmSettings.config.user%>"
-},
-"service": "<%= obmSettings.service%>"
-}
-<%= ( arr.length > 0 && i < arr.length-1 ) ? ',': '' %>
-<% }); %>
-],
-<% } %>
-  "relations": [
+  <% if (typeof obmSettings !== 'undefined') { %>
+  "obmSettings": [
+  <% obmSettings.forEach(function(obmSettings, i, arr) { %>
   {
-    <%relations.forEach(function(relations, i, arr) {
-%>
-"relationType": "<%= relations.relationType%>",
-"targets": ["<%=  relations.targets%>"]
-}
-<%= ( arr.length > 0 && i < arr.length-1 ) ? ',': '' %>
-<% }); %>
+    "config": {
+    "host": "<%= obmSettings.config.host%>",
+    "password": "<%= obmSettings.config.password%>",
+    "user": "<%= obmSettings.config.user%>"
+  },
+  "service": "<%= obmSettings.service%>"
+  }
+  <%= ( arr.length > 0 && i < arr.length-1 ) ? ',': '' %>
+  <% }); %>
   ],
-<% if (typeof sku !== 'undefined') { %>
-"sku": "<%= sku %>",
-<% } %>
+  <% } %>
+  "relations": [
+    {
+    <%relations.forEach(function(relations, i, arr) {
+  %>
+  "relationType": "<%= relations.relationType%>",
+  "targets": ["<%=  relations.targets%>"]
+  }
+  <%= ( arr.length > 0 && i < arr.length-1 ) ? ',': '' %>
+  <% }); %>
+  ],
+  <% if (typeof sku !== 'undefined') { %>
+  "sku": "<%= sku %>",
+  <% } %>
   "type": "<%= type %>",
-  "updatedAt": "<%= updatedAt %>",
+  "updatedAt": "<%= updatedAt.toISOString() %>",
   "workflows": "<%= workflows%>"
 }
