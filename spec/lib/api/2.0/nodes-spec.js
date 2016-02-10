@@ -2,7 +2,6 @@
 /* jshint node:true */
 
 'use strict';
-var debug = require('debug')('geoff');
 
 describe('Http.Api.Nodes', function () {
     var configuration;
@@ -17,7 +16,6 @@ describe('Http.Api.Nodes', function () {
         this.timeout(10000);
         return helper.startServer([
         ]).then(function () {
-            debug('configuring hellper injector');
             configuration = helper.injector.get('Services.Configuration');
             lookupService = helper.injector.get('Services.Lookup');
             lookupService.ipAddressToMacAddress = sinon.stub().resolves();
@@ -91,7 +89,7 @@ describe('Http.Api.Nodes', function () {
         it('should return a list of nodes', function () {
             waterline.nodes.find.resolves([node]);
 
-            return helper.request().get('/api/1.1/nodes')
+            return helper.request().get('/api/2.0/nodes')
                 .expect('Content-Type', /^application\/json/)
                 .expect(200, [node]);
         });
