@@ -35,6 +35,12 @@
   <% if (typeof sku !== 'undefined') { %>
   "sku": "<%= sku %>",
   <% } %>
+  <% if (typeof snmpSettings !== 'undefined') { %>
+  "snmpSettings": {
+  "community": "<%= snmpSettings.community %>",
+  "host": "<%= snmpSettings.host %>"
+},
+  <% } %>
   "type": "<%= type %>",
   "updatedAt": "<%= updatedAt.toISOString() %>",
   "workflows": "<%= workflows%>"
