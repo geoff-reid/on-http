@@ -64,6 +64,75 @@ describe('Services.Http.Swagger', function() {
             });
         });
 
+        it('should process query', function() {
+            var req = {
+                query: {},
+                swagger: {
+                    params: {
+                        firstName: {
+                            parameterObject: {
+                                in: 'query',
+                                type: 'string',
+                                definition: { name: 'firstName' }
+                            },
+                            value: 'Rack'
+                        },
+                        lastName: {
+                            parameterObject: {
+                                in: 'query',
+                                type: 'string',
+                                definition: { name: 'lastName' }
+                            },
+                            value: 'HD'
+                        },
+                        middleName: {
+                            parameterObject: {
+                                in: 'query',
+                                type: 'string',
+                                definition: { name: 'middleName' }
+                            },
+                            value:'John+Paul+George'
+                        },
+                        undefinedName: {
+                            parameterObject: {
+                                in: 'query',
+                                type: 'string',
+                                definition: { name: 'undefinedName' }
+                            },
+                            value: undefined
+                        },
+                        inBody: {
+                            parameterObject: {
+                                in: 'body',
+                                type: 'string',
+                            },
+                            value: 'not a query'
+                        }
+                    }
+                }
+            };
+            var res = {
+                headersSent: false
+            };
+            var mockData = {data: 'mock data'};
+            var optController = swaggerService.controller(mockController);
+
+            expect(optController).to.be.a('function');
+            mockController.resolves(mockData);
+            return optController(req, res, mockNext).then(function() {
+                expect(res.body).to.equal(mockData);
+                expect(mockNext).to.be.called.once;
+                expect(req.swagger.query).to.have.property('firstName')
+                    .and.to.equal('Rack');
+                expect(req.swagger.query).to.have.property('lastName')
+                    .and.to.equal('HD');
+                expect(req.swagger.query).to.have.property('middleName')
+                    .and.to.deep.equal(['John', 'Paul', 'George']);
+                expect(req.swagger.query).not.to.have.property('inBody');
+                expect(req.swagger.query).not.to.have.property('undefinedName');
+            });
+        });
+
         it('should not call next after sending headers', function() {
             var req = { swagger: {} };
             var res = {
