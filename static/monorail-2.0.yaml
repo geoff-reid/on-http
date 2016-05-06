@@ -811,6 +811,49 @@ paths:
           description: Unexpected error
           schema:
             $ref: '#/definitions/Error'
+  /profiles:
+    x-swagger-router-controller: profiles
+    get:
+      operationId: profilesGet
+      x-privileges: [ 'Read' ]
+      x-authentication-type: [ 'jwt' ]
+      summary: |
+        get list of possible profiles
+      description: |
+        get list of possible profiles
+      tags: [ "/api/2.0" ]
+      parameters:
+        - name: macs
+          in: query
+          description: |
+            List of valid MAC addresses to lookup
+          required: false
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+        - name: mac
+          in: query
+          description: |
+            When macs parameter is not passed, passed with IP adds MAC address to lookup
+          required: false
+          type: string
+        - name: ip
+          in: query
+          description: |
+            When macs parameters is not passed, passed with MAC adds IP address to lookup
+          required: false
+          type: string
+      responses:
+        200:
+          description: |
+            list of profiles for specified mac / ip
+          schema:
+            type: object
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
 
   /profiles/library:
     x-swagger-router-controller: unimplemented
