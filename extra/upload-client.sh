@@ -4,17 +4,21 @@ set -ex
 #PYPI_USER="user"
 #PYPI_PASS="password"
 
-cat << EOF > ~/.testfile3
+cat << EOF > ~/.pypirc
+[distutils]
 index-servers =
   pypi
-  pypitest
 
 [pypi]
-repository=https://pypi.python.org/pypi
+repository=https://testpypi.python.org/pypi
 username=${PYPI_USER}
 password=${PYPI_PASS}
 EOF
 
 
 
-cat ~/.testfile3
+cat ~/.pypirc
+
+cd ../on-http-api1.1
+python setup.py sdist upload
+
