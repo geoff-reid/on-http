@@ -48,6 +48,11 @@ deploy:
     on:
       branch: master
       node: "4"
+  - provider: script
+    script: ./extra/upload-client.sh
+    on:
+      branch: master
+      node: "4"
 
 notifications:
   slack:
