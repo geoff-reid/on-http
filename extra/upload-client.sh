@@ -18,7 +18,10 @@ EOF
 
 
 cat ~/.pypirc
+pwd
 
 cd ../on-http-api1.1
+
+pwd
 python setup.py sdist upload
 
