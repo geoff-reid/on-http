@@ -1,24 +1,20 @@
 #!/bin/bash
 set -ex
 
-#index-servers =
-#  pypi
-#  pypitest
+#PYPI_USER="user"
+#PYPI_PASS="password"
 
-#[pypi]
-#repository=https://pypi.python.org/pypi
-#username=
-#password=
+cat << EOF > ~/.testfile3
+index-servers =
+  pypi
+  pypitest
 
-pwd ~
+[pypi]
+repository=https://pypi.python.org/pypi
+username=${PYPI_USER}
+password=${PYPI_PASS}
+EOF
 
-if [ -f ~/.testfile ]
-then
-  cat ~/.testfile
-else
-  touch ~/.testfile
-fi
 
-echo "hi" >> ~/.testfile
 
-cat ~/.testfile
+cat ~/.testfile3
