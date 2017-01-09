@@ -51,7 +51,7 @@ deploy:
   - provider: script
     script: ./extra/upload-client.sh
     on:
-      branch: master
+      branch: test_pypi 
       node: "4"
 
 notifications:
