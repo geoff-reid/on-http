@@ -21,5 +21,5 @@ echo ${HOME}
 cat ~/.pypirc
 cd ./packagebuild/on-http-api1.1
 
-python setup.py sdist upload
+python setup.py -v sdist upload
 
