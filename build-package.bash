@@ -3,6 +3,8 @@ DEBDIR="./debianstatic/${1}"
 BRANCH=${2}
 set -x
 
+ls
+
 if [ ! -d "${DEBDIR}" ]; then
     echo "no such debian directory ${DEBDIR}"
     exit 1
@@ -60,3 +62,5 @@ rm /tmp/sed.script
 dch ${DCHOPTS}
 debuild --no-lintian --no-tgz-check -us -uc
 popd
+
+ls
