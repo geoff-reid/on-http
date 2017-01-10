@@ -21,7 +21,7 @@ cat ~/.pypirc
 pwd
 ls -al
 ls -R packagebuild
-cd on-http-api1.1
+cd ./packagebuild/on-http-api1.1
 
 pwd
 python setup.py sdist upload
