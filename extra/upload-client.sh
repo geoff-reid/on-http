@@ -19,7 +19,7 @@ EOF
 
 cat ~/.pypirc
 pwd
-
+ls
 cd on-http-api1.1
 
 pwd
