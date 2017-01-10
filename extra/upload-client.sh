@@ -19,7 +19,8 @@ EOF
 
 cat ~/.pypirc
 pwd
-ls
+ls -al
+ls -al packagebuild
 cd on-http-api1.1
 
 pwd
