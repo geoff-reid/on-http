@@ -15,7 +15,8 @@ username=${PYPI_USER}
 password=${PYPI_PASS}
 EOF
 
-
+echo ~
+echo ${HOME}
 
 cat ~/.pypirc
 cd ./packagebuild/on-http-api1.1
