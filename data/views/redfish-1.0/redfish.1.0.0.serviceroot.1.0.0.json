@@ -18,6 +18,12 @@
     "Chassis": {
         "@odata.id": "<%=basepath%>/Chassis"
     },
+    "DCIMCooling": {
+        "@odata.id": "<%=basepath%>/DCIMCooling"
+    },
+    "DCIMPower": {
+        "@odata.id": "<%=basepath%>/DCIMPower"
+    },
     "Managers": {
         "@odata.id": "<%=basepath%>/Managers"
     },
