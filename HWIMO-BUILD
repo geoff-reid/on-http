@@ -25,7 +25,8 @@ npm install --cache=`pwd`
 npm run apidoc
 npm run taskdoc
 npm prune --production
-
+./install-web-ui.sh
+./install-swagger-ui.sh
 git log -n 1 --pretty=format:%h.%ai.%s > commitstring.txt
 
 export DEBEMAIL="hwimo robots <hwimo@hwimo.lab.emc.com>"
