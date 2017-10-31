@@ -1,4 +1,4 @@
-swagger: '2.110'
+swagger: '2.10'
 info:
   title: Monorail API
   description: Monorail CI core API
